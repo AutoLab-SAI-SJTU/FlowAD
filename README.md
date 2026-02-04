@@ -1,6 +1,6 @@
 <div align="center">
 
-# UAD-Flow: Unified Autonomous Driving with Flow-based World Model
+# FlowAD: Ego-Scene Interactive Modeling for Autonomous Driving
 
 [![Paper](https://img.shields.io/badge/Paper-OpenReview-blue)](https://openreview.net/pdf?id=m4JpoJRgAr)
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-red)](https://openreview.net/pdf?id=m4JpoJRgAr)
@@ -9,25 +9,19 @@
 
 ## Introduction
 
-This repository contains the official implementation of **UAD-Flow**, a unified framework that integrates flow-based world models into various autonomous driving perception and planning systems. Our method enhances the temporal understanding and prediction capabilities of existing models through a novel flow-based attention mechanism.
+This repository contains the official implementation of **FlowAD**, a novel ego-scene interactive modeling framework for autonomous driving. Unlike traditional approaches that treat each timestamp in isolation, FlowAD explicitly models the **feedback of ego-vehicle motion** to future observations, fundamentally improving the understanding of the driving process and enhancing planning capabilities.
 
-### Key Features
+![The architecture of our FlowAD](figs/flowad_pipeline.png) 
+*The architecture of our FlowAD structured around three core components: 1) Ego-guided scene partition. 2) Spatial and temporal flow prediction. 3) Task-aware enhancement.*
 
-- **Flow-based World Model**: Leverages optical flow information to enhance temporal feature aggregation across multi-view cameras
-- **Unified Framework**: Applicable to various autonomous driving tasks including 3D detection, occupancy prediction, motion planning, and VLM-based driving
-- **Multi-scale Flow Patches**: Hierarchical flow feature extraction with configurable patch sizes (`flow_patches`) and feature levels (`flow_ids`)
-- **Seamless Integration**: Drop-in enhancement for existing autonomous driving models
+Inspired by human perception, FlowAD represents ego-scene interaction as **scene flow relative to the ego-vehicle**, capturing relative motion as learnable scene flow within the latent feature space. This enables modeling ego-motion feedback using existing log-replay datasets without requiring complex scenario simulations.
 
-### Core Technical Contribution
+**Key Achievements:**
+- **19% collision rate reduction** over SparseDrive on nuScenes
+- **60% FCP improvement** (1.39 frames) on nuScenes validation set  
+- **51.77 driving score** on Bench2Drive closed-loop evaluation
+- Demonstrated generality across **perception, end-to-end planning, and VLM analysis**
 
-Our flow method introduces a cross-view feature flow mechanism that:
-1. Aggregates features from adjacent camera views using learnable flow MLPs
-2. Applies multi-scale unfold-fold operations to capture spatial-temporal correlations
-3. Enhances the original feature maps with flow-aware representations
-
-Key parameters:
-- `flow_patches`: Patch sizes for multi-scale flow extraction (e.g., `[8, 4, 2, 1]`)
-- `flow_ids`: Feature level indices for flow processing (e.g., `[0, 1, 2, 3]`)
 
 ## Project Structure
 
@@ -50,8 +44,8 @@ Each sub-project has its own environment requirements. Please refer to the indiv
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/your-repo/UAD-Flow.git
-cd UAD-Flow
+git clone https://github.com/your-repo/FlowAD.git
+cd FlowAD
 ```
 
 2. Navigate to the desired sub-project:
@@ -61,16 +55,43 @@ cd SparseBEV-Flow  # or Senna-Flow, SparseDrive-Flow, SparseOcc-Flow
 
 3. Follow the sub-project's README for environment setup and training/evaluation.
 
+## Performance Highlights
+
+### nuScenes Open-Loop Evaluation
+
+Our method achieves significant improvements across multiple tasks:
+
+| Method | Backbone | Detection |  | Tracking |  | Motion Prediction |  | Planning |  | FCP↓ |
+|--------|----------|-----------|--|----------|--|-------------------|--|----------|--|------|
+|        |          | mAP↑ | NDS↑ | AMOTA↑ | AMOTP↓ | minADE↓ | minFDE↓ | Avg.L2 (m)↓ | Avg.Col↓ |  |
+| UniAD  | ResNet101 | 0.380 | 0.498 | 0.359 | 1.320 | 0.71 | 1.02 | 0.69 | 0.12 | 2.96 |
+| SparseDrive | ResNet101 | 0.496 | 0.588 | 0.501 | 1.085 | 0.60 | 0.96 | 0.58 | 0.06 | 2.30 |
+| **FlowAD (Ours)** | **ResNet101** | **0.523** | **0.605** | **0.518** | **1.040** | **0.56** | **0.93** | **0.52** | **0.05** | **0.91** |
+
+*FCP (Frames before Correct Planning): Lower is better. FlowAD achieves 1.39 frames improvement (48% reduction) over SparseDrive and 2.03 frames improvement (60% reduction) over baseline methods.*
+
+### Qualitative Results - Perception
+
+<!-- TODO: Add perception visualization here -->
+![Perception Results](figs/vis-detection.png) 
+*FlowAD demonstrates superior detection of occluded objects, small targets, and dense scenes through learned scene flow dynamics.*
+
+### Bench2Drive Closed-Loop Evaluation
+
+![Bench2Drive Results](figs/vis-b2d.png)
+*FlowAD achieves **51.77 driving score**, demonstrating robust closed-loop performance.*
+
+
 ## Citation
 
 If you find this work useful in your research, please consider citing:
 
 ```bibtex
-@inproceedings{uad-flow,
-  title={UAD-Flow: Unified Autonomous Driving with Flow-based World Model},
-  author={},
-  booktitle={},
-  year={2025},
+@inproceedings{FlowAD2026,
+  title={FlowAD: Ego-Scene Interactive Modeling for Autonomous Driving},
+  author={Anonymous},
+  booktitle={Under review as a conference paper at ICLR 2026},
+  year={2026},
   url={https://openreview.net/pdf?id=m4JpoJRgAr}
 }
 ```
@@ -83,8 +104,6 @@ This work builds upon several excellent open-source projects:
 - [SparseBEV](https://github.com/MCG-NJU/SparseBEV) - Sparse 3D object detection
 - [SparseDrive](https://github.com/swc-17/SparseDrive) - End-to-end autonomous driving
 - [SparseOcc](https://github.com/MCG-NJU/SparseOcc) - Sparse occupancy prediction
-- [LLaVA](https://github.com/haotian-liu/LLaVA) - Large language and vision assistant
-- [MMDetection3D](https://github.com/open-mmlab/mmdetection3d) - 3D detection toolbox
 
 ## License
 
