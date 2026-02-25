@@ -11,7 +11,7 @@ conda activate sparsedrive
 sparsedrive_path="path/to/sparsedrive"
 cd ${sparsedrive_path}
 pip3 install --upgrade pip
-pip3 install torch==1.13.0+cu116 torchvision==0.14.0+cu116 torchaudio==0.13.0 --extra-index-url https://download.pytorch.org/whl/cu116
+conda install pytorch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 pytorch-cuda=12.1 -c pytorch -c nvidia
 pip3 install -r requirement.txt
 ```
 
@@ -30,7 +30,8 @@ mkdir data
 ln -s path/to/nuscenes ./data/nuscenes
 ```
 
-Pack the meta-information and labels of the dataset, and generate the required pkl files to data/infos. Note that we also generate map_annos in data_converter, with a roi_size of (30, 60) as default, if you want a different range, you can modify roi_size in tools/data_converter/nuscenes_converter.py.
+You should download these [files]() and put them to the path data/infos.
+
 ```bash
 sh scripts/create_data.sh
 ```
@@ -50,12 +51,29 @@ wget https://download.pytorch.org/models/resnet50-19c8e357.pth -O ckpt/resnet50-
 ```
 
 ### Commence training and testing
+
+Before training, you should modify `num_gpus` in the config files to match your actual GPU count. The total batch size is fixed, and per-GPU batch size will be automatically computed:
+
+```
+# in projects/configs/sparsedrive_small_stage1_flow_attn_wm_mlfuse_ego_pe_spatial.py
+num_gpus = 2              # modify to match your actual GPU count
+total_batch_size = 32     # fixed, do not change
+batch_size = total_batch_size // num_gpus  # auto-computed
+
+# in projects/configs/sparsedrive_small_stage2_flow_attn_wm_mlfuse_ego_pe_spatial.py
+num_gpus = 2              # modify to match your actual GPU count
+total_batch_size = 64     # fixed, do not change
+batch_size = total_batch_size // num_gpus  # auto-computed
+```
+
+Also make sure the GPU count in `scripts/train_flowad.sh` matches `num_gpus` in the config.
+
 ```bash
 # train
-sh scripts/train.sh
+sh scripts/train_flowad.sh
 
 # test
-sh scripts/test.sh
+sh scripts/test_flowad.sh
 ```
 
 ### Visualization

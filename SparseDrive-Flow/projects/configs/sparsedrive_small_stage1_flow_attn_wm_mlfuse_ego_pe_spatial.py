@@ -9,12 +9,11 @@ dist_params = dict(backend="nccl")
 log_level = "INFO"
 work_dir = None
 
-workers_per_gpu = 4  # 4
+workers_per_gpu = 4
 
-batch_size = 4
-
-num_gpus = 8  # 8
-total_batch_size = batch_size * num_gpus  # 48
+num_gpus = 2
+total_batch_size = 32
+batch_size = total_batch_size // num_gpus
 num_iters_per_epoch = int(length[version] // (num_gpus * batch_size))
 num_epochs = 100  # 10
 checkpoint_epoch_interval = 5

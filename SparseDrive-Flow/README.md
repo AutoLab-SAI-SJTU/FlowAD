@@ -1,14 +1,8 @@
 # SparseDrive-Flow
 
-This project extends [SparseDrive](https://github.com/swc-17/SparseDrive) with our flow-based world model for enhanced end-to-end autonomous driving.
+This project extends [SparseDrive](https://github.com/swc-17/SparseDrive) with our flow-based framework for enhanced end-to-end autonomous driving.
 
 > **Note**: For paper information and citation, please refer to the [main README](../README.md).
-
-<center>
-    <img style="border-radius: 0.3125em;
-    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
-    src="resources/overview.png" width="1000">
-</center>
 
 ## Flow Method Extension
 
@@ -18,100 +12,115 @@ This repository adds flow-based feature enhancement to the original SparseDrive 
 
 - **Models**: `projects/mmdet3d_plugin/models/sparsedrive_flow*.py`
 - **Configs**: `projects/configs/sparsedrive_*_flow*.py`
-- **Training Scripts**: `scripts/train_flow*.sh`
+- **Training Scripts**: `scripts/train_flowad*.sh`
 
-### Flow Parameters
+<!-- ### Flow Parameters
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `flow_patches` | Patch sizes for multi-scale flow extraction | `[8, 4, 2, 1]` |
-| `flow_ids` | Feature level indices for flow processing | `[0, 1, 2, 3]` |
+| `flow_ids` | Feature level indices for flow processing | `[0, 1, 2, 3]` | -->
 
-### Recommended Flow Config
+### Recommended Flow Configs
 
 For best results, use the following configs:
+
+**ResNet-50 Backbone:**
 - Stage 1: `projects/configs/sparsedrive_small_stage1_flow_attn_wm_mlfuse_ego_pe_spatial.py`
 - Stage 2: `projects/configs/sparsedrive_small_stage2_flow_attn_wm_mlfuse_ego_pe_spatial.py`
 
-## Introduction
+**ResNet-101 Backbone:**
+- Stage 1: `projects/configs/sparsedrive_small_stage1_flow_attn_wm_mlfuse_ego_pe_spatial_r101.py`
+- Stage 2: `projects/configs/sparsedrive_small_stage2_flow_attn_wm_mlfuse_ego_pe_spatial_r101.py`
 
-SparseDrive-Flow is a Sparse-Centric paradigm for end-to-end autonomous driving enhanced with flow-based world models:
-- Sparse scene representation for efficient perception
-- Flow-enhanced temporal feature aggregation
-- Parallel motion prediction and planning
-- Hierarchical planning selection with collision-aware rescore
-
-<center>
-    <img src="resources/sparse_perception.png" width="1000">
-    <br>
-    <div>Symmetric sparse perception architecture</div>
-</center>
-
-<center>
-    <img src="resources/motion_planner.png" width="1000">
-    <br>
-    <div>Parallel motion planner structure</div>
-</center>
-
-## Results
-
-| Method | NDS | AMOTA | minADE (m) | L2 (m) Avg | Col. (%) Avg |
-| :---: | :---:| :---: | :---: | :---: | :---: |
-| SparseDrive-S | 0.525 | 0.386 | 0.62 | 0.61 | 0.08 |
-| SparseDrive-B | 0.588 | 0.501 | 0.60 | 0.58 | 0.06 |
 
 ## Quick Start
 
-Please refer to [docs/quick_start.md](docs/quick_start.md) for detailed setup instructions.
 
-### Environment Setup
-
+### Set up a new virtual environment
 ```bash
-# Create conda environment
-conda create -n sparsedrive python=3.8
+conda create -n sparsedrive python=3.8 -y
 conda activate sparsedrive
-
-# Install PyTorch
-conda install pytorch==2.0.0 torchvision==0.15.0 pytorch-cuda=11.8 -c pytorch -c nvidia
-
-# Install dependencies
-pip install -r requirement.txt
-
-# Install mmdet3d and other packages
-pip install openmim
-mim install mmcv-full==1.6.0
-mim install mmdet==2.28.2
-mim install mmsegmentation==0.30.0
-mim install mmdet3d==1.0.0rc6
 ```
 
-### Training
+### Install dependency packpages
+```bash
+sparsedrive_path="path/to/sparsedrive"
+cd ${sparsedrive_path}
+pip3 install --upgrade pip
+conda install pytorch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 pytorch-cuda=12.1 -c pytorch -c nvidia
+pip3 install -r requirement.txt
+```
 
-#### Train Original SparseDrive
+### Compile the deformable_aggregation CUDA op
+```bash
+cd projects/mmdet3d_plugin/ops
+python3 setup.py develop
+cd ../../../
+```
+
+### Prepare the data
+Download the [NuScenes dataset](https://www.nuscenes.org/nuscenes#download) and CAN bus expansion, put CAN bus expansion in /path/to/nuscenes, create symbolic links.
+```bash
+cd ${sparsedrive_path}
+mkdir data
+ln -s path/to/nuscenes ./data/nuscenes
+```
+
+You should download these [files]() and put them to the path data/infos for training.
+
+
+Pack the meta-information and labels of the dataset, and generate the required pkl files to data/infos. Note that we also generate map_annos in data_converter, with a roi_size of (30, 60) as default, if you want a different range, you can modify roi_size in tools/data_converter/nuscenes_converter.py.
+```bash
+sh scripts/create_data.sh
+```
+
+### Generate anchors by K-means
+Gnerated anchors are saved to data/kmeans and can be visualized in vis/kmeans.
+```bash
+sh scripts/kmeans.sh
+```
+
+
+### Download pre-trained weights
+Download the required backbone [pre-trained weights](https://download.pytorch.org/models/resnet50-19c8e357.pth).
+```bash
+mkdir ckpt
+wget https://download.pytorch.org/models/resnet50-19c8e357.pth -O ckpt/resnet50-19c8e357.pth
+```
+
+### Commence training and testing
+
+Before training, you should modify `num_gpus` in the config files to match your actual GPU count. The total batch size is fixed, and per-GPU batch size will be automatically computed:
+
+```
+# in projects/configs/sparsedrive_small_stage1_flow_attn_wm_mlfuse_ego_pe_spatial.py
+num_gpus = 2              # modify to match your actual GPU count
+total_batch_size = 32     # fixed, do not change
+batch_size = total_batch_size // num_gpus  # auto-computed
+
+# in projects/configs/sparsedrive_small_stage2_flow_attn_wm_mlfuse_ego_pe_spatial.py
+num_gpus = 2              # modify to match your actual GPU count
+total_batch_size = 64     # fixed, do not change
+batch_size = total_batch_size // num_gpus  # auto-computed
+```
+
+Also make sure the GPU count in `scripts/train_flowad.sh` matches `num_gpus` in the config.
 
 ```bash
-# Stage 1
-bash scripts/train.sh projects/configs/sparsedrive_small_stage1.py 8
+# train
+sh scripts/train_flowad.sh
 
-# Stage 2
-bash scripts/train.sh projects/configs/sparsedrive_small_stage2.py 8
+# test
+sh scripts/test_flowad.sh
 ```
 
-#### Train SparseDrive-Flow
-
-```bash
-# Stage 1 with flow
-bash scripts/train_flow_attn_wm_mlfuse_ego_pe_spatial_s1.sh
-
-# Stage 2 with flow
-bash scripts/train_flow_attn_wm_mlfuse_ego_pe_spatial_s2.sh
+### Visualization
+```
+sh scripts/visualize.sh
 ```
 
-### Evaluation
 
-```bash
-bash scripts/test_flow.sh projects/configs/sparsedrive_small_stage2_flow_attn_wm_mlfuse_ego_pe_spatial.py checkpoints/your_model.pth 8
-```
 
 ## Acknowledgement
 

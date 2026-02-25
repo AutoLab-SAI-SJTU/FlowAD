@@ -9,12 +9,11 @@ dist_params = dict(backend="nccl")
 log_level = "INFO"
 work_dir = None
 
-workers_per_gpu = 4  # 4
+workers_per_gpu = 4
 
-batch_size = 8
-
-num_gpus = 8  # 8
-total_batch_size = batch_size * num_gpus  # 48
+num_gpus = 2
+total_batch_size = 64
+batch_size = total_batch_size // num_gpus
 num_iters_per_epoch = int(length[version] // (num_gpus * batch_size))
 num_epochs = 100  # 10
 checkpoint_epoch_interval = 5
@@ -746,11 +745,8 @@ evaluation = dict(
     eval_mode=eval_mode,
 )
 # ================== pretrained model ========================
-load_from = 'ckpt/sparsedrive_stage2.pth'
-load_from = './'
-load_from = '/data3/guomingzhe/SparseDrive/work_dirs/sparsedrive_small_stage2_flow_attn_wm_mlfuse2_refine-all/iter_7800.pth'
-load_from = '/data3/guomingzhe/SparseDrive/work_dirs/sparsedrive_small_stage1_flow_attn_wm_mlfuse_ego_pe_spatial/iter_10000.pth'
-load_from = './SparseDrive/pretrain/iter_45695_final_s1.pth'
+# You can choose the ckpt you saved in stage1
+load_from = './work_dirs/sparsedrive_small_stage1_flow_attn_wm_mlfuse_ego_pe_spatial/iter_175800.pth'
 
 revise_keys = None
 # revise_keys = [('backbone', 'img_backbone'), ('neck', 'img_neck')]

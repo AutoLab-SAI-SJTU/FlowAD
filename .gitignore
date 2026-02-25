@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+*.whl
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Data & model weights
+data/
+pretrain/
+pretrained/
+ckpts/
+ckpt/
+checkpoints/
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+*.onnx
+*.npy
+*.pkl
+
+# Training outputs
+output/
+outputs/
+work_dirs/
+log/
+logs/
+*.log
+*.log.json
+tensorboard/
+tf_logs/
+wandb/
+mlruns/
+
+# Visualization outputs
+vis/
+
+# Evaluation results
+results*.json
+results*.pkl
+metrics*.json
+submission*.json
+plots/
+
+# Personal / environment-specific scripts
+carla.sh
+
+# PDF (large figures not needed in repo)
+*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Misc
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
