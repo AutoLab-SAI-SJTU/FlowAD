@@ -92,7 +92,7 @@ Our method achieves significant improvements across multiple tasks:
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/your-repo/FlowAD.git
+git clone https://github.com/AutoLab-SAI-SJTU/FlowAD.git
 cd FlowAD
 ```
 
